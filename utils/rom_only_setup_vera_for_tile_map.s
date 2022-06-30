@@ -6,14 +6,26 @@ TILE_MAP_HEIGHT = 64
 
     ; -- First wait until VERA is ready
     
+    ldx #$a5
 wait_for_vera:
     lda #42
     sta VERA_ADDR_LOW
 
     lda VERA_ADDR_LOW
     cmp #42
-    bne wait_for_vera
+    beq vera_ready
+    dex
+    beq vera_tilemap_done   ; Give up, there is no VERA
     
+    ldy #$00
+vera_boot_snooze:           ; Short wait before checking VERA again
+    nop
+    nop
+    iny
+    bne vera_boot_snooze
+    jmp wait_for_vera
+
+vera_ready:
     ; -- Show first sign of live by enabling VGA as soon as possible
   
     lda #%00010001           ; Enable Layer 0, Enable VGA
@@ -41,4 +53,4 @@ wait_for_vera:
     
     lda #($1F0 >> 1)         ; Set tilebase for layer 0 to 0x1F000. This also sets the tile width and height to 8 px
     sta VERA_L0_TILEBASE
-    
+vera_tilemap_done:
